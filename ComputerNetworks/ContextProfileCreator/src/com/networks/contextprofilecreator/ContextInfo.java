@@ -1,9 +1,6 @@
 package com.networks.contextprofilecreator;
 
-//import java.lang.reflect.Array;
-//import java.util.ArrayList;
-//
-//import android.R.array;
+import android.location.Location;
 
 public class ContextInfo {
 	//Initial contact time
@@ -11,34 +8,50 @@ public class ContextInfo {
 	//computation speed
 	//Network bandwidth
 	//Unique ID
-	private double contextLatitude = 0;
-	private double contextLongitude = 0;
-	private double contextDistanceFrom = -1;
+	private Location contextLocation;
 	private String contextCPUUsage = "";
+	private double contextAcc = 0;
+	private long startTime;
 	
+	public long getStartTime()
+	{
+		return startTime;
+	}
+	public void setStartTime()
+	{
+		startTime = System.currentTimeMillis();
+	}
+	public float getContextSpeed()
+	{
+		return contextLocation.getSpeed();
+	}
+	public Location getContextLocation()
+	{
+		return contextLocation;
+	}
+	public void setContextLocation(Location lat)
+	{
+		contextLocation = lat;
+	}
+	public double getContextAcc()
+	{
+		return contextAcc;
+	}
+	public void setContextAcc(double lat)
+	{
+		contextAcc = lat;
+	}
 	public double getContextLatitude()
 	{
-		return contextLatitude;
-	}
-	public void setContextLatitude(double lat)
-	{
-		contextLatitude = lat;
+		return contextLocation.getLatitude();
 	}
 	public double getContextLongitude()
 	{
-		return contextLongitude;
+		return contextLocation.getLongitude();
 	}
-	public void setContextLongitude(double lat)
+	public double getContextDistanceFrom(Location loc)
 	{
-		contextLongitude = lat;
-	}
-	public double getContextDistanceFrom()
-	{
-		return contextDistanceFrom;
-	}
-	public void setContextDistanceFrom(double lat)
-	{
-		contextDistanceFrom = lat;
+		return contextLocation.distanceTo(loc);
 	}
 	public String getContextCPUUsage()
 	{
@@ -51,19 +64,28 @@ public class ContextInfo {
 	
 	public ContextInfo()
 	{
-		
+		startTime = System.currentTimeMillis();
 	}
 	
 	public ContextInfo(String temp)
 	{
 		String[] arrTemp = temp.split(",");	
-		if(arrTemp.length < 4)
+		if(arrTemp.length < 6)
 		{
 			return;
 		}
-		contextLatitude = Double.parseDouble(arrTemp[0]);
-		contextLongitude = Double.parseDouble(arrTemp[1]);
-		contextDistanceFrom = Double.parseDouble(arrTemp[2]);
-		contextCPUUsage = arrTemp[3];
+		startTime = Long.parseLong(arrTemp[0]);
+		contextAcc = Double.parseDouble(arrTemp[1]);
+		Location loc = new Location("History_Data");
+		loc.setLatitude(Double.parseDouble(arrTemp[2]));
+		loc.setLongitude(Double.parseDouble(arrTemp[3]));
+		loc.setSpeed(Float.parseFloat(arrTemp[4]));
+		contextLocation = loc;
+		contextCPUUsage = arrTemp[5];
+	}
+	
+	public long returnCurrentTime()
+	{
+		return System.currentTimeMillis();
 	}
 }

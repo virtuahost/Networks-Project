@@ -3,24 +3,35 @@ package com.networks.contextprofilecreator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+//import android.hardware.Sensor;
+//import android.hardware.SensorEvent;
+//import android.hardware.SensorEventListener;
+//import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.lang.Runtime;
 
-public class ContextManager extends Activity {
+public class ContextManager extends Activity {//implements SensorEventListener{
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	private String locationProvider = LocationManager.GPS_PROVIDER;
 	private Location lastKnownLocation;
 	private HistoricalContext objHistory = new HistoricalContext();
-	private KalmanFilter objKalmanFilter = new KalmanFilter();
+	private KalmanFilterMobility objKalmanFilter = new KalmanFilterMobility();
 	private Location trackingLoc;
+	private String uniqueID = "XYZ";		//Placeholder
+//	private SensorManager objSensorManager;
+//	private Sensor objSensor;
+	private double accU = 1;
+	private String filename = "Context_History";
 	
 	public Location getTrackingLoc()
 	{
@@ -34,7 +45,12 @@ public class ContextManager extends Activity {
 	public ContextManager()
 	{
 		//Load Data from file -- To Be Implemented
-		//checkDataBackup();
+		checkDataBackup();
+		//Sensor to get acceleration data
+//		objSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//		if (objSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null){
+//		    objSensor = objSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+//		  }
 		// Acquire a reference to the system Location Manager
 		locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 		//
@@ -57,7 +73,48 @@ public class ContextManager extends Activity {
 		}
 		locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
 		lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+		updateContextInfo();
 	}
+	
+	private void checkDataBackup()
+	{
+		String strContextData = "";
+		try
+		{
+			FileInputStream is = this.openFileInput(filename);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			if (is!=null) {	
+				while ((strContextData = reader.readLine()) != null) {	
+					ContextInfo objContextInfo = new ContextInfo(strContextData);
+					objHistory.appendContextdata(objContextInfo);
+					long timeDiff = objContextInfo.returnCurrentTime() - objHistory.getLastContextdata().getStartTime();
+					objKalmanFilter.Update(objContextInfo.getContextLocation(),timeDiff);
+				}				
+			}		
+			is.close();	
+		}
+		catch(Exception ex)
+		{
+			
+		}
+	}
+	
+//	@Override
+//	  public final void onSensorChanged(SensorEvent event) {
+//	    accU = event.values[0];
+//	  }
+//	
+//	@Override
+//	  protected void onResume() {
+//	    super.onResume();
+//	    objSensorManager.registerListener(this, objSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//	  }
+//
+//	  @Override
+//	  protected void onPause() {
+//	    super.onPause();
+//	    objSensorManager.unregisterListener(this);
+//	  }
 	
 	private void getLocUpdates(ContextInfo objContextInfo)
 	{
@@ -68,9 +125,8 @@ public class ContextManager extends Activity {
 		{
 			lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
 		}
-		objContextInfo.setContextDistanceFrom(lastKnownLocation.distanceTo(trackingLoc));
-		objContextInfo.setContextLatitude(lastKnownLocation.getLatitude());
-		objContextInfo.setContextLongitude(lastKnownLocation.getLongitude());
+//		objContextInfo.setContextLocation(lastKnownLocation);
+		objContextInfo.setContextAcc(accU);
 		locationManager.removeUpdates(locationListener);
 	}
 	
@@ -79,11 +135,12 @@ public class ContextManager extends Activity {
 		ContextInfo objContextInfo = objHistory.getLastContextdata();
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 		alertDialog.setTitle("Context Infromation");
-		alertDialog.setMessage("Context Distance: " + objContextInfo.getContextDistanceFrom());
+//		alertDialog.setMessage("Context Distance: " + objContextInfo.getContextDistanceFrom());
 		alertDialog.setMessage("Context Latitude: " + objContextInfo.getContextLatitude());
 		alertDialog.setMessage("Context Longitude: " + objContextInfo.getContextLongitude());
 		alertDialog.setMessage("Context CPU Usage: " + objContextInfo.getContextCPUUsage());
-		alertDialog.setMessage("Context Predicted Location: " + getPredictedLoc(trackingLoc));
+		long timeDiff = objContextInfo.returnCurrentTime() - objHistory.getLastContextdata().getStartTime();
+		alertDialog.setMessage("Context Predicted Location: " + getPredictedLoc(timeDiff));
 		alertDialog.setPositiveButton("Ok", null);
 		alertDialog.show();
 	}
@@ -149,8 +206,10 @@ public class ContextManager extends Activity {
 		ContextInfo objContextInfo = new ContextInfo();
 		this.getLocUpdates(objContextInfo);
 		this.getCPUusage(objContextInfo);
+		objContextInfo.setStartTime();
 		objHistory.appendContextdata(objContextInfo);
-		objKalmanFilter.Update();
+		long timeDiff = objContextInfo.returnCurrentTime() - objHistory.getLastContextdata().getStartTime();
+		objKalmanFilter.Update(objContextInfo.getContextLocation(),timeDiff);
 	}
 	
 	private void getCPUusage(ContextInfo objContextInfo)
@@ -180,11 +239,29 @@ public class ContextManager extends Activity {
 	
 	public void saveStateData()
 	{
-		//To be implemented --- save data to file		
+		//To be implemented --- save data to file
+		FileOutputStream outputStream;
+
+		try {
+		  outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+		  for(int i=0; i < objHistory.getContextlength(); i ++)
+		  {
+			  ContextInfo objContextInfo = objHistory.getContextdata(i);
+			  String contextData = objContextInfo.getStartTime() +"," 
+					  + objContextInfo.getContextAcc() +"," + objContextInfo.getContextLatitude() +","
+					  + objContextInfo.getContextLongitude() +"," 
+					  + objContextInfo.getContextSpeed() +","
+					  + objContextInfo.getContextCPUUsage();
+			  outputStream.write(contextData.getBytes());
+		  }
+		  outputStream.close();
+		} catch (Exception e) {
+		  e.printStackTrace();
+		}
 	}
 	
-	private String getPredictedLoc(Location loc)
+	private Location getPredictedLoc(double time)
 	{
-		return objKalmanFilter.predictTime();
+		return objKalmanFilter.predictTime(time,uniqueID);		
 	}
 }

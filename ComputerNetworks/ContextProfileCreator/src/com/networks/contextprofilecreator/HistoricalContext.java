@@ -19,4 +19,9 @@ public class HistoricalContext {
 	{
 		return lstContextData.get(lstContextData.size() - 1);		
 	}
+	
+	public int getContextlength()
+	{
+		return lstContextData.size();
+	}
 }

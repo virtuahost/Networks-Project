@@ -5,6 +5,11 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry kind="lib" path="C:/Users/Deep/Downloads/ejml-master.zip"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-core-0.26.jar"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-core-0.26-sources.jar"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-equation-0.26.jar"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-equation-0.26-sources.jar"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-experimental-0.26.jar"/>
+	<classpathentry kind="lib" path="C:/virtua&apos;s stuff/eclipse/Eclipse Work/ejml-master/ejml-master/libraries/EJML-experimental-0.26-sources.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
