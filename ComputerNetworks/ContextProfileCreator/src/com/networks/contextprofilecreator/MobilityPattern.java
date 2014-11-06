@@ -36,4 +36,12 @@ public class MobilityPattern extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	@Override
+	public void onDestroy()
+	{
+		//To be implemented save states to file for future use
+//		objContextDatahandler.saveStateData();
+	}
 }
+

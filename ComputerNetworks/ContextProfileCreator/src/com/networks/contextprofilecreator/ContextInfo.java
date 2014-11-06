@@ -1,5 +1,10 @@
 package com.networks.contextprofilecreator;
 
+//import java.lang.reflect.Array;
+//import java.util.ArrayList;
+//
+//import android.R.array;
+
 public class ContextInfo {
 	//Initial contact time
 	//Final contact time
@@ -42,5 +47,23 @@ public class ContextInfo {
 	public void setContextCPUUsage(String lat)
 	{
 		contextCPUUsage = lat;
+	}
+	
+	public ContextInfo()
+	{
+		
+	}
+	
+	public ContextInfo(String temp)
+	{
+		String[] arrTemp = temp.split(",");	
+		if(arrTemp.length < 4)
+		{
+			return;
+		}
+		contextLatitude = Double.parseDouble(arrTemp[0]);
+		contextLongitude = Double.parseDouble(arrTemp[1]);
+		contextDistanceFrom = Double.parseDouble(arrTemp[2]);
+		contextCPUUsage = arrTemp[3];
 	}
 }

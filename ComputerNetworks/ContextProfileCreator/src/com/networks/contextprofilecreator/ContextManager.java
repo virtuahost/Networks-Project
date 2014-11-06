@@ -7,6 +7,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -17,7 +18,8 @@ public class ContextManager extends Activity {
 	private LocationListener locationListener;
 	private String locationProvider = LocationManager.GPS_PROVIDER;
 	private Location lastKnownLocation;
-	private ContextInfo objContextInfo = new ContextInfo();
+	private HistoricalContext objHistory = new HistoricalContext();
+	private KalmanFilter objKalmanFilter = new KalmanFilter();
 	private Location trackingLoc;
 	
 	public Location getTrackingLoc()
@@ -31,6 +33,8 @@ public class ContextManager extends Activity {
 	
 	public ContextManager()
 	{
+		//Load Data from file -- To Be Implemented
+		//checkDataBackup();
 		// Acquire a reference to the system Location Manager
 		locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 		//
@@ -55,7 +59,7 @@ public class ContextManager extends Activity {
 		lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
 	}
 	
-	private void getLocUpdates()
+	private void getLocUpdates(ContextInfo objContextInfo)
 	{
 		locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
 		Location currentLocation = locationManager.getLastKnownLocation(locationProvider);
@@ -72,12 +76,14 @@ public class ContextManager extends Activity {
 	
 	public void printUpdates()
 	{
+		ContextInfo objContextInfo = objHistory.getLastContextdata();
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 		alertDialog.setTitle("Context Infromation");
 		alertDialog.setMessage("Context Distance: " + objContextInfo.getContextDistanceFrom());
 		alertDialog.setMessage("Context Latitude: " + objContextInfo.getContextLatitude());
 		alertDialog.setMessage("Context Longitude: " + objContextInfo.getContextLongitude());
 		alertDialog.setMessage("Context CPU Usage: " + objContextInfo.getContextCPUUsage());
+		alertDialog.setMessage("Context Predicted Location: " + getPredictedLoc(trackingLoc));
 		alertDialog.setPositiveButton("Ok", null);
 		alertDialog.show();
 	}
@@ -140,11 +146,14 @@ public class ContextManager extends Activity {
 	
 	public void updateContextInfo()
 	{
-		this.getLocUpdates();
-		this.getCPUusage();
+		ContextInfo objContextInfo = new ContextInfo();
+		this.getLocUpdates(objContextInfo);
+		this.getCPUusage(objContextInfo);
+		objHistory.appendContextdata(objContextInfo);
+		objKalmanFilter.Update();
 	}
 	
-	private void getCPUusage()
+	private void getCPUusage(ContextInfo objContextInfo)
 	{
 		// -m 10, how many entries you want, -d 1, delay by how much, -n 1,
 		// number of iterations
@@ -167,5 +176,15 @@ public class ContextManager extends Activity {
 		}
 		objContextInfo.setContextCPUUsage(list.toString());
 		
+	}
+	
+	public void saveStateData()
+	{
+		//To be implemented --- save data to file		
+	}
+	
+	private String getPredictedLoc(Location loc)
+	{
+		return objKalmanFilter.predictTime();
 	}
 }
